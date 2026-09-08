@@ -20,11 +20,11 @@ Developer ID identity is required for the current self-signed distribution.
 1. Set `MARKETING_VERSION` and increment `CURRENT_PROJECT_VERSION` in `project.yml`.
 2. Add release notes under `docs/releases/v<version>.md`.
 3. Run `xcodegen generate`, tests, lint, and clean Debug/Release builds, then commit the changes.
-4. Push the commit and its version tag. For version `0.2.0`:
+4. Push the commit and its version tag. For version `1.0.0`:
 
 ```sh
-git tag -a v0.2.0 -m "Dittoo 0.2.0"
-git push origin main v0.2.0
+git tag -a v1.0.0 -m "Dittoo 1.0.0"
+git push origin main v1.0.0
 ```
 
 The [Release workflow](../.github/workflows/release.yml) starts on pushed `v*` tags and accepts
