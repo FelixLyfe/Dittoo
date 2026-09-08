@@ -57,19 +57,13 @@ struct AppearanceTests {
         dark("border", c.border, is: Color.white.opacity(0.20))
         dark("textSecondary", c.textSecondary, is: Color.white.opacity(0.60))
         dark("textTertiary", c.textTertiary, is: Color.white.opacity(0.40))
-        dark("noteText", c.noteText, is: Color.white.opacity(0.90))
         dark("cardFill", c.cardFill, is: Color.white.opacity(0.05))
         dark("cardStroke", c.cardStroke, is: Color.white.opacity(0.10))
         dark("glassFrost", c.glassFrost, is: Color.white.opacity(0.05))
-        dark("dropGuide", c.dropGuide, is: Color.white.opacity(0.35))
-        dark("brand", c.brand, is: Color(red: 0.525, green: 0.231, blue: 1.0))
 
         print("# tokens that absorbed a literal duplicated across views")
-        dark("iconPlaceholder", c.iconPlaceholder, is: Color.white.opacity(0.06))
         dark("sheen", c.sheen, is: Color.white.opacity(0.04))
         dark("textPrimary", c.textPrimary, is: Color.white)
-        // VolumeSlider drew white 0.85; textPrimary is alpha 1, so `.opacity` has to reproduce it.
-        dark("textPrimary at 0.85", c.textPrimary.opacity(0.85), is: Color.white.opacity(0.85))
 
         print("# every surface token resolves per appearance")
         for (label, token) in [
@@ -77,9 +71,8 @@ struct AppearanceTests {
             ("menuHover", c.menuHover), ("separator", c.separator),
             ("controlSurface", c.controlSurface), ("border", c.border),
             ("textPrimary", c.textPrimary), ("textSecondary", c.textSecondary),
-            ("textTertiary", c.textTertiary), ("noteText", c.noteText), ("cardFill", c.cardFill),
-            ("cardStroke", c.cardStroke), ("glassFrost", c.glassFrost), ("dropGuide", c.dropGuide),
-            ("iconPlaceholder", c.iconPlaceholder), ("sheen", c.sheen)
+            ("textTertiary", c.textTertiary), ("cardFill", c.cardFill),
+            ("cardStroke", c.cardStroke), ("glassFrost", c.glassFrost), ("sheen", c.sheen)
         ] {
             adapts(label, token)
         }

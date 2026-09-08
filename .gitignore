@@ -38,27 +38,7 @@ fastlane/test_output/
 *.xccovarchive
 *.xccovreport
 
-# CocoaPods (if ever added)
-Pods/
-
-# Carthage (if ever added)
-Carthage/Build/
-
-# Mint (if ever added)
-.mint/
-
-# Tuist (if ever added)
-Tuist/.build/
-
-# Extension runtime toolchain (Scripts/raycast-runtime)
-node_modules/
-
 # Temporary files
 *.swp
 *.tmp
 *.orig
-# Website (Next.js). `out/` is the static export, `.source/` is generated from
-# content/docs by fumadocs-mdx on install and build.
-website/.next/
-website/out/
-website/.source/

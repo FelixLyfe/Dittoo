@@ -48,7 +48,6 @@ struct CalloutPlacementTests {
         horizontalClamping()
         caretTracking()
         degenerateContainers()
-        rowGrammar()
 
         print("\(passes) passed, \(failures) failed")
         if failures > 0 { exit(1) }
@@ -169,19 +168,6 @@ struct CalloutPlacementTests {
         expect(
             farLeading.caretX >= caretLimit - 0.001,
             "the pointer stops clear of the leading corner arc")
-    }
-
-    // MARK: - Shared row grammar
-    //
-    // Lives here because this is the only harness that compiles `Theme.swift`. Every palette list
-    // puts its leading glyph in one `rowIcon` slot so titles line up at the same x and switching
-    // modes doesn't shift the column sideways; a glyph that outgrew the slot would break that.
-
-    static func rowGrammar() {
-        expect(
-            Theme.Size.checkbox <= Theme.Size.rowIcon,
-            "the uninstall checkbox fits inside the shared leading slot")
-        expect(Theme.Size.checkbox > 0, "and is a real size")
     }
 
     // MARK: - Containers smaller than the callout

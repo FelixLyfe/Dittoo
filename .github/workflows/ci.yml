@@ -1,9 +1,7 @@
 name: CI
 
 # The job is a merge gate. There is no xcodebuild step: the full Debug build costs minutes and the
-# release workflow already builds before it ships, so CI keeps to the two checks that finish in about
-# a minute. Both go through the scripts rather than naming rules or harnesses here, so this file
-# cannot drift from them. See docs/testing.md.
+# tag-triggered Release workflow builds before packaging, so CI keeps to the fast checks.
 #
 # PRs only, deliberately. `pull_request` builds the *merge result*, so a push to `main` that came from
 # a green PR would re-test content CI has already seen. Use "Run workflow" for a direct push to main.

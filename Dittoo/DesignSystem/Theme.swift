@@ -1,0 +1,168 @@
+import SwiftUI
+
+/// Central design tokens. Colours resolve per appearance; every dark branch is the literal the
+/// forced-dark build shipped, so Dark is the baseline and may never be re-derived.
+enum Theme {
+    enum Spacing {
+        static let xxs: CGFloat = 2
+        static let xs: CGFloat = 4
+        static let sm: CGFloat = 6
+        static let md: CGFloat = 8
+        static let lg: CGFloat = 10
+        static let xl: CGFloat = 12
+        static let xxl: CGFloat = 20
+        /// Gap under a category header, shared by every palette list's `SectionHeader`.
+        static let sectionHeaderBottom: CGFloat = 4
+        /// Space above every header but the first, reading as the previous section's close.
+        static let sectionSpacing: CGFloat = 12
+    }
+
+    enum Radius {
+        static let panel: CGFloat = 26
+        static let row: CGFloat = 10
+        static let menu: CGFloat = 6
+        /// Hover highlight behind a popover menu row.
+        static let menuRow: CGFloat = 10
+        static let menuPanel: CGFloat = 16
+        /// The dialog and HUD surface, so a dialog reads as a sibling of the palette.
+        static let dialog: CGFloat = 20
+        static let thumbnail: CGFloat = 6
+        static let card: CGFloat = 10
+        static let keyCap: CGFloat = 6
+        /// Settings shortcut-recorder keycap — smaller than the palette's `keyCap` chip.
+        static let recorderKeyCap: CGFloat = 4
+    }
+
+    enum Size {
+        static let panelWidth: CGFloat = 750
+        static let panelHeight: CGFloat = 475
+        /// Fraction of visible height above the palette's top edge; it grows downward.
+        static let paletteTopMarginFraction: CGFloat = 0.18
+        static let headerHeight: CGFloat = 44
+        /// Fixed slot for the header glyph, so the field starts at one x in every mode.
+        static let headerIconSlot: CGFloat = 22
+        /// Room above the search row, constant so typing never shifts the bar.
+        static let headerPadding: CGFloat = 10
+        static let bottomBarHeight: CGFloat = 52
+        /// A `BarButton`'s hover capsule, shared by the footer group and the header's filter.
+        static let barButtonHeight: CGFloat = 28
+        static let rowIcon: CGFloat = 24
+        static let keyCap: CGFloat = 18
+        /// Settings shortcut-recorder keycap — smaller than the palette's `keyCap` chip.
+        static let recorderKeyCap: CGFloat = 16
+        /// Fixed so the recorder can't resize as its binding changes.
+        static let shortcutRecorder: CGFloat = 120
+        /// One text line in the recorder callout.
+        static let shortcutPopoverLine: CGFloat = 14
+        /// Summed from the laid-out bands; the width is pinned by `callout-test`.
+        static let shortcutPopover = CGSize(
+            width: 132,
+            height: Spacing.sm * 2 + heroKeyCap + Spacing.sm + shortcutPopoverLine + Spacing.sm
+                + compactKeyCap + calloutCaretHeight)
+        /// The callout's pointer: a triangle with a rounded tip.
+        static let calloutCaretWidth: CGFloat = 15
+        static let calloutCaretHeight: CGFloat = 7
+        static let calloutCaretTip: CGFloat = 2.5
+        /// Keycaps: `compact` hints, `keyCap` is standard, `hero` where the cap is content.
+        static let compactKeyCap: CGFloat = 15
+        static let heroKeyCap: CGFloat = 22
+        static let menuButton: CGFloat = 36
+        static let clipboardListWidth: CGFloat = 290
+        static let menuWidth: CGFloat = 276
+        /// The clipboard type filter's menu; `menuWidth` is far too wide for five short rows.
+        static let clipboardFilterMenuWidth: CGFloat = 200
+        /// A menu row's glyph slot, sized so symbol and app-icon rows read the same.
+        static let menuIcon: CGFloat = 20
+        /// Opening size and the resize floor; tall enough that the sidebar's rows never scroll.
+        static let settingsWindow = CGSize(width: 860, height: 700)
+        /// Settings sidebar width.
+        static let settingsSidebar: CGFloat = 215
+        /// The narrowest the pane column may get before a grouped row's control starts colliding.
+        static let settingsDetailMinimum: CGFloat = 420
+        static let settingsRowIcon: CGFloat = 20
+        /// Dittoo's dialog has a fixed width and content-measured height.
+        static let dialogWidth: CGFloat = 420
+        /// A dialog's leading glyph, larger than a row icon: it carries the subject.
+        static let dialogIcon: CGFloat = 32
+    }
+
+    enum Duration {
+        /// How a borderless surface arrives and leaves; the exit is shorter, so it feels quick.
+        static let enter: TimeInterval = 0.18
+        static let exit: TimeInterval = 0.12
+        /// Fade-in/out for a hover `Tooltip`.
+        static let tooltip: TimeInterval = 0.15
+    }
+
+    /// System text styles (not hardcoded sizes) so the UI honors Dynamic Type.
+    enum Typography {
+        /// One size, two frameworks: `TextTrailingDragHandle` measures what the field renders.
+        static let searchFieldSize: CGFloat = 20
+        static let searchField = Font.system(size: searchFieldSize, weight: .regular)
+        /// `NSFont` is not `Sendable`, hence the isolation; every reader is a view anyway.
+        @MainActor static let searchFieldNSFont = NSFont.systemFont(
+            ofSize: searchFieldSize, weight: .regular)
+        static let headerIcon = Font.system(size: 18, weight: .medium)
+        static let rowTrailing = Font.callout
+        static let sectionHeader = Font.subheadline.weight(.medium)
+        static let keyCap = Font.caption
+        /// Pair with the matching `Size` for `KeyCapChip.Scale`.
+        static let compactKeyCap = Font.caption2
+        static let heroKeyCap = Font.body
+        static let bar = Font.callout.weight(.medium)
+        /// A dropdown control's trailing chevron, deliberately smaller than the label it follows.
+        static let disclosure = Font.caption.weight(.semibold)
+        static let menuRow = Font.body
+        static let menuShortcut = Font.callout
+        static let menuIcon = Font.body
+    }
+
+    enum Colors {
+        /// Resolves against the window's `effectiveAppearance`, which `NSHostingView` republishes as
+        /// SwiftUI's `colorScheme`, so a token repaints without anything observing the setting.
+        static func adaptive(dark: NSColor, light: NSColor) -> Color {
+            Color(nsColor: NSColor(name: nil) { $0.isDark ? dark : light })
+        }
+
+        /// The alpha ramp, inverted: white ink over the dark surface, black ink over the light one.
+        static func ramp(dark: Double, light: Double) -> Color {
+            adaptive(dark: .srgbInk(1, alpha: dark), light: .srgbInk(0, alpha: light))
+        }
+
+        /// The ramp's inverse: the scrim darkens the dark surface and lightens the light one.
+        static let panelScrim = adaptive(dark: .srgbInk(0, alpha: 0.40), light: .srgbInk(1, alpha: 0.55))
+        /// Selection fill, shared by every list so they look identical.
+        static let selection = ramp(dark: 0.10, light: 0.09)
+        /// Mouse hover: a fainter layer, visually distinct from selection.
+        static let rowHover = ramp(dark: 0.05, light: 0.045)
+        static let menuHover = ramp(dark: 0.10, light: 0.09)
+        static let separator = ramp(dark: 0.10, light: 0.12)
+        /// Small control surfaces: kbd chips, glyph tiles.
+        static let controlSurface = ramp(dark: 0.10, light: 0.08)
+        /// Control borders: outlined kbd chips.
+        static let border = ramp(dark: 0.20, light: 0.18)
+        /// Alpha 1, so a call site can dim it with `.opacity` and land on the value it replaced.
+        static let textPrimary = ramp(dark: 1.0, light: 1.0)
+        static let textSecondary = ramp(dark: 0.60, light: 0.60)
+        static let textTertiary = ramp(dark: 0.40, light: 0.42)
+        /// The faint wash behind the Onboarding header.
+        static let sheen = ramp(dark: 0.04, light: 0.04)
+        /// The Settings card: a faint surface whose border doubles as the row divider.
+        static let cardFill = ramp(dark: 0.05, light: 0.04)
+        static let cardStroke = ramp(dark: 0.10, light: 0.10)
+        /// White in both: the frost brightens glass, and light glass needs more of it to read at all.
+        static let glassFrost = adaptive(dark: .srgbInk(1, alpha: 0.05), light: .srgbInk(1, alpha: 0.25))
+        /// Destructive tint: a destructive label, and a `.danger` dialog's glyph.
+        static let destructive = Color.red
+        /// Success tint: the leading glyph of a `.success` dialog.
+        static let success = Color.green
+    }
+}
+
+extension View {
+    /// A floating glass control surface, frosted so it reads brighter than clear glass.
+    func frosted(in shape: some Shape) -> some View {
+        glassEffect(.regular.interactive().tint(Theme.Colors.glassFrost), in: shape)
+            .tint(.clear)
+    }
+}

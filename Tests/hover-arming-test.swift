@@ -55,7 +55,7 @@ struct HoverArmingTests {
         state.notePointerMoved(to: rest)
         expect(!state.hoverHighlightArmed, "a mouse-moved event that has not moved arms nothing")
         let state2 = armed()
-        state2.prepare(mode: .clipboard)
+        state2.prepare()
         expect(!state2.hoverHighlightArmed, "switching mode disarms the highlight again")
     }
 

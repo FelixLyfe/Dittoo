@@ -17,7 +17,7 @@ struct ClipboardTests {
         typeFilterSplitsTheHistory()
         typeFilterJoinsTheSearchMemo()
         persistence()
-        migrationFromShippedDatabase()
+        schemaUpgradePreservesHistory()
 
         print("\(passes)/\(passes + failures) passed")
         if failures > 0 { exit(1) }
@@ -90,13 +90,16 @@ struct ClipboardTests {
     /// Retention sweeps everything around a pin but never the pin itself.
     static func pinsSurvivePruningAndTheWindow() {
         withStore { store, dir in
-            // Older than the 1-day retention the case sets below, but inside the default the import prunes against.
+            store.addText("ancient-pinned", sourceBundleID: nil)
+            store.addText("ancient-loose", sourceBundleID: nil)
+            store.addText("fresh", sourceBundleID: nil)
+            // Age the saved rows past the 1-day retention used below.
             let old = Date().addingTimeInterval(-2 * 86_400)
-            _ = store.importEntries([
-                entry("ancient-pinned", at: old),
-                entry("ancient-loose", at: old.addingTimeInterval(1)),
-                entry("fresh", at: Date())
-            ])
+            sqlite(dir.appendingPathComponent("clipboard.sqlite3"), """
+                UPDATE items SET created_at = \(old.timeIntervalSince1970)
+                WHERE text IN ('ancient-pinned', 'ancient-loose');
+                """)
+            store.load()
             store.togglePinned(item(store, "ancient-pinned"))
 
             store.maxAge = 86_400
@@ -115,17 +118,14 @@ struct ClipboardTests {
         }
     }
 
-    /// A pin must lead a filtered search even when the FTS statement's LIMIT cannot reach it.
+    /// A pin must lead a filtered search even beyond the first page of history.
     static func pinsLeadFilteredSearches() {
         withStore { store, _ in
-            var seed: [ClipboardItem] = []
-            let base = Date().addingTimeInterval(-10_000)
-            // The pinned hit is the oldest of 260 matches; the FTS statement stops at 200.
-            seed.append(entry("needle in the haystack", at: base))
+            // The pinned hit is the oldest of 260 matches; a history page holds 200.
+            store.addText("needle in the haystack", sourceBundleID: nil)
             for i in 1...259 {
-                seed.append(entry("haystack filler \(i)", at: base.addingTimeInterval(Double(i))))
+                store.addText("haystack filler \(i)", sourceBundleID: nil)
             }
-            _ = store.importEntries(seed)
             store.togglePinned(item(store, "needle in the haystack"))
 
             let results = store.search("haystack", filter: .all)
@@ -242,8 +242,8 @@ struct ClipboardTests {
         }
     }
 
-    /// A shipped pre-pin database migrates in place. Failing to open one is not a soft failure: the store deletes and recreates a database it can't open, taking the history with it.
-    static func migrationFromShippedDatabase() {
+    /// Opening an earlier schema adds pin support in place and preserves its history.
+    static func schemaUpgradePreservesHistory() {
         let dir = scratchDirectory()
         defer { try? FileManager.default.removeItem(at: dir) }
         let db = dir.appendingPathComponent("clipboard.sqlite3")
@@ -251,11 +251,11 @@ struct ClipboardTests {
 
         let store = ClipboardStore(directory: dir)
         store.load()
-        expect(texts(store) == ["newer", "older"], "existing history survives the migration")
+        expect(texts(store) == ["newer", "older"], "existing history survives the schema upgrade")
 
         store.addText("after", sourceBundleID: nil)
         store.togglePinned(item(store, "older"))
-        expect(texts(store) == ["older", "after", "newer"], "the migrated database takes pins")
+        expect(texts(store) == ["older", "after", "newer"], "the upgraded database takes pins")
 
         let reopened = ClipboardStore(directory: dir)
         reopened.load()
@@ -282,12 +282,12 @@ struct ClipboardTests {
     static func scratchDirectory() -> URL {
         let dir = FileManager.default.temporaryDirectory
             .appendingPathComponent(
-                "tinycast-clipboard-test-\(UUID().uuidString)", isDirectory: true)
+                "Dittoo-clipboard-test-\(UUID().uuidString)", isDirectory: true)
         try? FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
         return dir
     }
 
-    /// Writes the schema as shipped before pinning existed: no `pinned_at`, and two rows to migrate.
+    /// Writes the schema before pinning existed: no `pinned_at`, and two history rows.
     static func seedPrePinDatabase(at url: URL) {
         let now = Date().timeIntervalSince1970
         sqlite(
@@ -314,7 +314,7 @@ struct ClipboardTests {
             """)
     }
 
-    /// Rows returned by the `sqlite3` CLI — used to write a legacy database and to read the schema back, neither of which the store exposes.
+    /// Rows returned by the `sqlite3` CLI, used to prepare fixtures and inspect the saved database.
     @discardableResult
     static func sqlite(_ database: URL, _ sql: String) -> Set<String> {
         let task = Process()
@@ -329,17 +329,12 @@ struct ClipboardTests {
         let data = pipe.fileHandleForReading.readDataToEndOfFile()
         task.waitUntilExit()
         if task.terminationStatus != 0 { fail("sqlite3 failed: \(sql.prefix(60))") }
-        return Set(String(decoding: data, as: UTF8.self).split(separator: "\n").map(String.init))
+        let output = String(bytes: data, encoding: .utf8) ?? ""
+        return Set(output.split(separator: "\n").map(String.init))
     }
 
     static func form(_ text: String) -> ClipboardItem.TextForm? {
         ClipboardItem(text: text, sourceBundleID: nil).textForm
-    }
-
-    static func entry(_ text: String, at date: Date) -> ClipboardItem {
-        ClipboardItem(
-            id: UUID(), kind: .text, text: text, imagePath: nil, createdAt: date,
-            sourceBundleID: nil)
     }
 
     static func texts(_ store: ClipboardStore, filter: ClipboardFilter = .all) -> [String] {

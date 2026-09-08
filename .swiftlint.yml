@@ -3,14 +3,12 @@
 # about style a formatter would otherwise own. See docs/standards.md.
 
 included:
-  - Tinycast
+  - Dittoo
   - Tests
 
 excluded:
-  - Tinycast/DesignSystem/Scrolling/EdgeDissolve.swift
-  - Tinycast/DesignSystem/Scrolling/ThinScrollbar.swift
-  - Tinycast/Features/Emoji/Model/EmojiData.generated.swift
-  - Tinycast/Features/Calculator/Model/CurrencyData.generated.swift
+  - Dittoo/DesignSystem/Scrolling/EdgeDissolve.swift
+  - Dittoo/DesignSystem/Scrolling/ThinScrollbar.swift
 
 # Noisy here, or actively wrong for this codebase.
 disabled_rules:
@@ -27,7 +25,7 @@ disabled_rules:
   - multiple_closures_with_trailing_closure   # fights SwiftUI
   - opening_brace                             # ─┐ a formatter's job, and there is no formatter
   - trailing_comma                            # ─┘ here, so these would just be standing noise
-  # `count` is a hit count on LauncherRankingRecord and PaletteRowIndex, not a collection count.
+  # A numeric `count` is not necessarily a collection count.
   # This rule rewrites `count == 0` to `isEmpty` on both, which does not compile.
   - empty_count
 
